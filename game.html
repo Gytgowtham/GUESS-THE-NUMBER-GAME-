@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guess the Number</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+
+    .game-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      width: 100%; max-width: 420px;
+      text-align: center;
+    }
+
+    .stars { font-size: 11px; letter-spacing: 4px; color: #f0a500; margin-bottom: 1rem; }
+
+    .game-title {
+      font-size: 28px; font-weight: 700;
+      background: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 2rem; }
+
+    .range-badge {
+      display: inline-block;
+      background: rgba(142,197,252,0.15);
+      border: 1px solid rgba(142,197,252,0.3);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 13px; color: #8ec5fc;
+      margin-bottom: 1.8rem;
+    }
+
+    .hearts { display: flex; justify-content: center; gap: 8px; margin-bottom: 1.8rem; }
+    .heart { font-size: 20px; transition: transform 0.3s; }
+    .heart.lost { filter: grayscale(1); opacity: 0.3; transform: scale(0.85); }
+
+    .score-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .score-block { text-align: center; }
+    .score-label { font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .score-val { font-size: 22px; font-weight: 700; color: #fff; }
+    .score-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.1); }
+
+    .input-row { display: flex; gap: 10px; margin-bottom: 1.2rem; }
+
+    .num-input {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 22px; font-weight: 600;
+      color: #fff; text-align: center;
+      outline: none;
+    }
+    .num-input:focus { border-color: #8ec5fc; }
+    .num-input::placeholder { color: rgba(255,255,255,0.2); font-size: 14px; font-weight: 400; }
+
+    .check-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none; border-radius: 12px;
+      padding: 14px 22px;
+      color: #fff; font-size: 15px; font-weight: 600;
+      cursor: pointer;
+    }
+    .check-btn:hover { opacity: 0.88; }
+    .check-btn:active { transform: scale(0.97); }
+
+    .result-box {
+      min-height: 52px;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px; font-weight: 500;
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .result-idle  { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); border: 1px dashed rgba(255,255,255,0.1); }
+    .result-hot   { background: rgba(239,68,68,0.15);   border: 1px solid rgba(239,68,68,0.3);   color: #fca5a5; }
+    .result-cold  { background: rgba(96,165,250,0.12);  border: 1px solid rgba(96,165,250,0.3);  color: #93c5fd; }
+    .result-right { background: rgba(34,197,94,0.15);   border: 1px solid rgba(34,197,94,0.3);   color: #86efac; }
+
+    .hint-list {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      justify-content: center; margin-bottom: 1.5rem; min-height: 32px;
+    }
+    .hint-pill {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 3px 12px;
+      font-size: 12px; color: rgba(255,255,255,0.55);
+    }
+
+    .play-again-btn {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 13px;
+      color: rgba(255,255,255,0.7); font-size: 14px;
+      cursor: pointer; display: none;
+    }
+    .play-again-btn:hover { background: rgba(255,255,255,0.12); }
+    .play-again-btn.show { display: block; }
+
+    .game-over-msg { color: #fca5a5; font-size: 18px; font-weight: 600; margin-bottom: 0.5rem; }
+    .win-msg       { color: #86efac; font-size: 18px; font-weight: 600; margin-bottom: 0.5rem; }
+    .reveal        { font-size: 12px; color: rgba(255,255,255,0.4); }
+  </style>
+</head>
+<body>
+
+  <div class="game-card">
+    <div class="stars">★ ★ ★ ★ ★</div>
+    <h1 class="game-title">Guess the Number</h1>
+    <p class="subtitle">Can you crack the secret number?</p>
+
+    <div class="range-badge">Range: 1 — 100</div>
+
+    <div class="hearts" id="hearts"></div>
+
+    <div class="score-row">
+      <div class="score-block">
+        <div class="score-label">Attempts</div>
+        <div class="score-val" id="attempts">0</div>
+      </div>
+      <div class="score-sep"></div>
+      <div class="score-block">
+        <div class="score-label">Lives</div>
+        <div class="score-val" id="lives-text">10</div>
+      </div>
+      <div class="score-sep"></div>
+      <div class="score-block">
+        <div class="score-label">Best</div>
+        <div class="score-val" id="best">—</div>
+      </div>
+    </div>
+
+    <div class="input-row">
+      <input class="num-input" id="guessinput" type="number" min="1" max="100" placeholder="Enter 1–100" />
+      <button class="check-btn" id="checkbtn" onclick="checkGuess()">Check →</button>
+    </div>
+
+    <div class="result-box result-idle" id="result">
+      <span id="result-text">Make your first guess!</span>
+    </div>
+
+    <div class="hint-list" id="hints"></div>
+    <div id="end-msg"></div>
+    <button class="play-again-btn" id="playagain" onclick="resetGame()">↺ Play Again</button>
+  </div>
+
+  <script>
+    var randomNumber = 0;
+    var totalLives = 10;
+    var currentLives = 10;
+    var attempts = 0;
+    var bestScore = null;
+    var gameOver = false;
+    var guesses = [];
+
+    function initGame() {
+      randomNumber = Math.floor(Math.random() * 100) + 1;
+      currentLives = totalLives;
+      attempts = 0;
+      gameOver = false;
+      guesses = [];
+      renderHearts();
+      document.getElementById('attempts').textContent = '0';
+      document.getElementById('lives-text').textContent = totalLives;
+      document.getElementById('hints').innerHTML = '';
+      document.getElementById('end-msg').innerHTML = '';
+      document.getElementById('playagain').classList.remove('show');
+      document.getElementById('guessinput').disabled = false;
+      document.getElementById('checkbtn').disabled = false;
+      setResult('idle', 'Make your first guess!');
+      updateBest();
+    }
+
+    function renderHearts() {
+      var h = '';
+      for (var i = 0; i < totalLives; i++) {
+        h += '<span class="heart' + (i >= currentLives ? ' lost' : '') + '">♥</span>';
+      }
+      document.getElementById('hearts').innerHTML = h;
+    }
+
+    function setResult(type, msg) {
+      var box = document.getElementById('result');
+      box.className = 'result-box result-' + type;
+      document.getElementById('result-text').textContent = msg;
+    }
+
+    function updateBest() {
+      document.getElementById('best').textContent = bestScore !== null ? bestScore : '—';
+    }
+
+    function addHint(num) {
+      var pill = document.createElement('span');
+      pill.className = 'hint-pill';
+      pill.textContent = num;
+      document.getElementById('hints').appendChild(pill);
+    }
+
+    function checkGuess() {
+      if (gameOver) return;
+      var input = document.getElementById('guessinput');
+      var val = parseInt(input.value);
+
+      if (!val || val < 1 || val > 100) {
+        setResult('hot', 'Enter a number between 1 and 100!');
+        return;
+      }
+      if (guesses.includes(val)) {
+        setResult('hot', 'You already tried ' + val + '! Pick another.');
+        return;
+      }
+
+      guesses.push(val);
+      attempts++;
+      currentLives--;
+      document.getElementById('attempts').textContent = attempts;
+      document.getElementById('lives-text').textContent = currentLives;
+      renderHearts();
+      addHint(val);
+      input.value = '';
+
+      if (val === randomNumber) {
+        setResult('right', '🎉 Correct! It was ' + randomNumber + '!');
+        if (bestScore === null || attempts < bestScore) bestScore = attempts;
+        updateBest();
+        endGame(true);
+      } else if (currentLives <= 0) {
+        endGame(false);
+      } else {
+        var diff = Math.abs(val - randomNumber);
+        var hint = val < randomNumber ? 'Too low! Go higher ↑' : 'Too high! Go lower ↓';
+        if (diff <= 5)       hint += ' (very close!)';
+        else if (diff <= 15) hint += ' (getting warm...)';
+        else                 hint += ' (quite far...)';
+        setResult(diff <= 5 ? 'hot' : 'cold', hint);
+      }
+    }
+
+    function endGame(won) {
+      gameOver = true;
+      document.getElementById('guessinput').disabled = true;
+      document.getElementById('checkbtn').disabled = true;
+      document.getElementById('playagain').classList.add('show');
+      var msg = document.getElementById('end-msg');
+      if (won) {
+        msg.innerHTML = '<p class="win-msg">You won in ' + attempts + ' attempt' + (attempts > 1 ? 's' : '') + '!</p>';
+      } else {
+        msg.innerHTML = '<p class="game-over-msg">Game Over!</p><p class="reveal">The number was <strong style="color:#fff">' + randomNumber + '</strong></p>';
+        setResult('hot', 'No lives left. Better luck next time!');
+      }
+    }
+
+    function resetGame() { initGame(); }
+
+    document.getElementById('guessinput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') checkGuess();
+    });
+
+    initGame();
+  </script>
+
+</body>
+</html>

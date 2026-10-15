@@ -29,6 +29,6 @@ A fun and interactive number guessing game built with pure **HTML, CSS, and Java
 ## 🛠️ Tech Stack
 - HTML5
 - CSS3 (Flexbox, Gradients, Transitions)
-- Vanilla JavaScript (DOM Manipulation, Game Logic)
+- JavaScript (DOM Manipulation, Game Logic)
 
 ## 📂 Project Structure
